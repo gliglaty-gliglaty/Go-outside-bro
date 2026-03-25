@@ -40,6 +40,12 @@
             "description": "Enable hours. Disable for minutes.",
             "type": "bool",
             "default": false
+        },
+        "test-mode": {
+            "name": "Test Mode",
+            "description": "Show a reminder every 5 seconds for testing.",
+            "type": "bool",
+            "default": false
         }
     }
 }
