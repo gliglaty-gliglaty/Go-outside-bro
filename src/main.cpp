@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/PlayLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -31,6 +32,15 @@ protected:
 
     float getReminderSeconds() {
         auto mod = Mod::get();
+
+        bool testMode = false;
+        if (mod->hasSetting("test-mode")) {
+            testMode = mod->getSettingValue<bool>("test-mode");
+        }
+
+        if (testMode) {
+            return 5.f;
+        }
 
         int amount = 30;
         bool useHours = false;
@@ -69,6 +79,18 @@ protected:
         return msgs[rand() % msgs.size()];
     }
 
+    void showReminder() {
+        auto message = getRandomMessage();
+
+        Notification::create(
+            "Go outside, bro!\n" + message,
+            NotificationIcon::Info,
+            4.0f
+        )->show();
+
+        FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
+    }
+
 public:
     static ReminderNode* create() {
         auto ret = new ReminderNode();
@@ -90,20 +112,20 @@ public:
 
         if (m_timer >= needed) {
             m_timer = 0.f;
-
-            auto message = getRandomMessage();
-
-            FLAlertLayer::create(
-                "Go outside, bro!",
-                message,
-                "OK"
-            )->show();
-
-            auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
-            FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
+            showReminder();
         }
     }
 };
+
+static void attachReminderNode(CCNode* parent) {
+    if (!parent) return;
+
+    if (parent->getChildByID("gooutside-reminder-node")) return;
+
+    auto reminder = ReminderNode::create();
+    reminder->setID("gooutside-reminder-node");
+    parent->addChild(reminder, 9999);
+}
 
 class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
@@ -111,9 +133,18 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
             return false;
         }
 
-        auto reminder = ReminderNode::create();
-        this->addChild(reminder);
+        attachReminderNode(this);
+        return true;
+    }
+};
 
+class $modify(GoOutsideBroPlayLayer, PlayLayer) {
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
+            return false;
+        }
+
+        attachReminderNode(this);
         return true;
     }
 };
