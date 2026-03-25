@@ -286,52 +286,6 @@ public:
     }
 };
 
-class PlaytimePopup : public FLAlertLayer {
-public:
-    static PlaytimePopup* create() {
-        auto layer = new PlaytimePopup();
-        if (layer && layer->init(
-            nullptr,
-            "Playtime Tracker",
-            "",
-            "Close",
-            nullptr,
-            420.f,
-            240.f
-        )) {
-            layer->autorelease();
-            layer->setupContent();
-            return layer;
-        }
-
-        CC_SAFE_DELETE(layer);
-        return nullptr;
-    }
-
-    void setupContent() {
-        double totalTracked = ReminderNode::getTrackedTotalTime();
-
-        std::string text =
-            "Tracked playtime by this mod:\n" +
-            formatTime(totalTracked) +
-            "\n\nThis is the time tracked since the mod was installed,\nnot the full account lifetime playtime.";
-
-        auto label = CCLabelBMFont::create(
-            text.c_str(),
-            "bigFont.fnt",
-            300.f,
-            kCCTextAlignmentCenter
-        );
-
-        label->setScale(0.45f);
-        label->setPosition(ccp(
-            m_pLayer->getContentSize().width / 2,
-            m_pLayer->getContentSize().height / 2
-        ));
-        m_pLayer->addChild(label);
-    }
-};
-
 class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) {
@@ -359,7 +313,18 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     }
 
     void onOpenPlaytime(CCObject*) {
-        PlaytimePopup::create()->show();
+        double totalTracked = ReminderNode::getTrackedTotalTime();
+
+        std::string text =
+            "Tracked playtime by this mod:\n" +
+            formatTime(totalTracked) +
+            "\n\nThis is the time tracked since the mod was installed,\nnot the full account lifetime playtime.";
+
+        FLAlertLayer::create(
+            "Playtime Tracker",
+            text,
+            "OK"
+        )->show();
     }
 };
 
