@@ -21,6 +21,12 @@
         "community": "https://github.com/gliglaty-gliglaty/Go-outside-bro"
     },
     "settings": {
+        "enable-notifications": {
+            "name": "Enable Notifications",
+            "description": "Disable this if you only want the playtime tracker.",
+            "type": "bool",
+            "default": true
+        },
         "language-french": {
             "name": "French Language",
             "description": "Enable French messages. Disable for English.",
@@ -35,6 +41,14 @@
             "min": 1,
             "max": 999
         },
+        "reminder-hours": {
+            "name": "Use Hours",
+            "description": "Enable hours. Disable for minutes.",
+            "type": "bool",
+            "default": false
+        }
+    }
+}        },
         "reminder-hours": {
             "name": "Use Hours",
             "description": "Enable hours. Disable for minutes.",
