@@ -32,7 +32,7 @@ protected:
     float getReminderSeconds() {
         auto mod = Mod::get();
 
-        int amount = mod->getSettingValue<int64_t>("reminder-amount");
+        int amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
         bool useHours = mod->getSettingValue<bool>("reminder-hours");
 
         if (amount < 1) amount = 1;
