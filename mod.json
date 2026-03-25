@@ -58,14 +58,6 @@
             "description": "Enable white notification box. Disable for black.",
             "type": "bool",
             "default": false
-        },
-        "notification-volume": {
-            "name": "Notification Volume",
-            "description": "Set the volume of reminder notifications.",
-            "type": "float",
-            "default": 1.0,
-            "min": 0.0,
-            "max": 1.0
         }
     }
 }
