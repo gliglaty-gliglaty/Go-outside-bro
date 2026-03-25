@@ -1,12 +1,17 @@
 {
     "geode": "5.4.1",
     "gd": {
-        "win": "2.2081",
-        "android": "2.2081"
+        "win": "2.208",
+        "android": "2.208"
     },
     "id": "liminalstudio.gooutsidebro",
     "name": "Go outside, bro!",
     "version": "1.0.0",
     "developer": "liminal studio",
-    "description": "A mod to encourage you to go outside."
+    "description": "A mod to encourage you to go outside.",
+    "resources": {
+        "sprites": [
+            "resources/gob.png"
+        ]
+    }
 }
