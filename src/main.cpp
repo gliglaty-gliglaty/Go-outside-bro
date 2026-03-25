@@ -3,6 +3,28 @@
 
 using namespace geode::prelude;
 
+static std::string formatTime(double totalSeconds) {
+    int seconds = static_cast<int>(totalSeconds);
+
+    int days = seconds / 86400;
+    seconds %= 86400;
+
+    int hours = seconds / 3600;
+    seconds %= 3600;
+
+    int minutes = seconds / 60;
+    seconds %= 60;
+
+    std::string result;
+
+    if (days > 0) result += std::to_string(days) + "d ";
+    if (hours > 0 || days > 0) result += std::to_string(hours) + "h ";
+    if (minutes > 0 || hours > 0 || days > 0) result += std::to_string(minutes) + "m ";
+    result += std::to_string(seconds) + "s";
+
+    return result;
+}
+
 class ReminderNode : public CCNode {
 protected:
     float m_timer = 0.f;
@@ -157,10 +179,6 @@ protected:
         return msgs[rand() % msgs.size()];
     }
 
-    float getNotificationTime() {
-        return 4.5f;
-    }
-
 public:
     static ReminderNode* create() {
         auto ret = new ReminderNode();
@@ -174,8 +192,27 @@ public:
         return nullptr;
     }
 
+    static double getTrackedTotalTime() {
+        return Mod::get()->getSavedValue<double>("tracked-total-seconds", 0.0);
+    }
+
     void tick(float dt) {
         m_timer += dt;
+
+        auto mod = Mod::get();
+
+        double totalTracked = mod->getSavedValue<double>("tracked-total-seconds", 0.0);
+        totalTracked += dt;
+        mod->setSavedValue("tracked-total-seconds", totalTracked);
+
+        bool notificationsEnabled = true;
+        if (mod->hasSetting("enable-notifications")) {
+            notificationsEnabled = mod->getSettingValue<bool>("enable-notifications");
+        }
+
+        if (!notificationsEnabled) {
+            return;
+        }
 
         float needed = getReminderSeconds();
         if (needed <= 0.f) return;
@@ -188,7 +225,7 @@ public:
             auto notif = Notification::create(
                 message,
                 NotificationIcon::Info,
-                getNotificationTime()
+                4.5f
             );
 
             if (notif) {
@@ -201,6 +238,52 @@ public:
     }
 };
 
+class PlaytimePopup : public FLAlertLayer {
+public:
+    static PlaytimePopup* create() {
+        auto layer = new PlaytimePopup();
+        if (layer && layer->init(
+            nullptr,
+            "Playtime Tracker",
+            "",
+            "Close",
+            nullptr,
+            420.f,
+            240.f
+        )) {
+            layer->autorelease();
+            layer->setupContent();
+            return layer;
+        }
+
+        CC_SAFE_DELETE(layer);
+        return nullptr;
+    }
+
+    void setupContent() {
+        double totalTracked = ReminderNode::getTrackedTotalTime();
+
+        std::string text =
+            "Tracked playtime by this mod:\n" +
+            formatTime(totalTracked) +
+            "\n\nThis is the time tracked since the mod was installed,\nnot the full account lifetime playtime.";
+
+        auto label = CCLabelBMFont::create(
+            text.c_str(),
+            "bigFont.fnt",
+            300.f,
+            kCCTextAlignmentCenter
+        );
+
+        label->setScale(0.45f);
+        label->setPosition(ccp(
+            m_pLayer->getContentSize().width / 2,
+            m_pLayer->getContentSize().height / 2
+        ));
+        m_pLayer->addChild(label);
+    }
+};
+
 class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) {
@@ -210,7 +293,25 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
         auto reminder = ReminderNode::create();
         this->addChild(reminder);
 
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+
+        auto sprite = ButtonSprite::create("Time");
+        auto button = CCMenuItemSpriteExtra::create(
+            sprite,
+            this,
+            menu_selector(GoOutsideBroMenuLayer::onOpenPlaytime)
+        );
+
+        auto menu = CCMenu::create();
+        menu->setPosition(ccp(winSize.width - 55.f, winSize.height / 2));
+        menu->addChild(button);
+        this->addChild(menu, 100);
+
         return true;
+    }
+
+    void onOpenPlaytime(CCObject*) {
+        PlaytimePopup::create()->show();
     }
 };
 
