@@ -1,13 +1,9 @@
 {
-    "language": {
-        "name": "Language",
-        "description": "Choose the language of reminder messages.",
-        "type": "string",
-        "default": "en",
-        "enum": [
-            "en",
-            "fr"
-        ]
+    "language-french": {
+        "name": "French Language",
+        "description": "Enable French messages. Disable for English.",
+        "type": "bool",
+        "default": false
     },
     "reminder-amount": {
         "name": "Reminder Amount",
@@ -17,14 +13,10 @@
         "min": 1,
         "max": 999
     },
-    "reminder-unit": {
-        "name": "Reminder Unit",
-        "description": "Choose if the reminder uses minutes or hours.",
-        "type": "string",
-        "default": "minutes",
-        "enum": [
-            "minutes",
-            "hours"
-        ]
+    "reminder-hours": {
+        "name": "Use Hours",
+        "description": "Enable hours. Disable for minutes.",
+        "type": "bool",
+        "default": false
     }
 }
