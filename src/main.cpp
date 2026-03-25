@@ -209,6 +209,11 @@ protected:
         return msgs[rand() % msgs.size()];
     }
 
+    void playReminderSound() {
+        auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
+        FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
+    }
+
     void showReminderNow() {
         auto message = getRandomMessage();
 
@@ -222,8 +227,7 @@ protected:
             notif->show();
         }
 
-        auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
-        FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
+        playReminderSound();
     }
 
     void refreshSettingsState() {
