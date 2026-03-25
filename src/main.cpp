@@ -345,12 +345,12 @@ public:
     void tick(float dt) {
         refreshSettingsState();
 
-        m_timer += dt;
-
         auto mod = Mod::get();
         double totalTracked = mod->getSavedValue<double>("tracked-total-seconds", 0.0);
         totalTracked += dt;
         mod->setSavedValue("tracked-total-seconds", totalTracked);
+
+        m_timer += dt;
 
         if (getTestMode()) {
             m_testTimer += dt;
