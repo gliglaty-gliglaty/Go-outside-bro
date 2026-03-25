@@ -98,6 +98,13 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
             return false;
         }
 
+        auto logo = CCSprite::create("gob.png"_spr);
+        if (logo) {
+            logo->setScale(0.35f);
+            logo->setPosition(ccp(70.f, 260.f));
+            this->addChild(logo, 100);
+        }
+
         auto reminder = ReminderNode::create();
         this->addChild(reminder);
 
@@ -109,7 +116,6 @@ $on_mod(Loaded) {
     auto mod = Mod::get();
     log::info("Go outside, bro! loaded");
 
-    // Valeurs de secours si les settings ne sont pas encore définis
     if (!mod->hasSetting("language")) {
         log::info("Setting 'language' not found yet");
     }
