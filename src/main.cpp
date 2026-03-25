@@ -32,12 +32,12 @@ protected:
     float getReminderSeconds() {
         auto mod = Mod::get();
 
-        int amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
-        std::string unit = mod->getSettingValue<std::string>("reminder-unit");
+        int amount = mod->getSettingValue<int64_t>("reminder-amount");
+        bool useHours = mod->getSettingValue<bool>("reminder-hours");
 
         if (amount < 1) amount = 1;
 
-        if (unit == "hours") {
+        if (useHours) {
             return static_cast<float>(amount * 3600);
         }
 
@@ -46,9 +46,9 @@ protected:
 
     std::string getRandomMessage() {
         auto mod = Mod::get();
-        std::string language = mod->getSettingValue<std::string>("language");
+        bool french = mod->getSettingValue<bool>("language-french");
 
-        if (language == "fr") {
+        if (french) {
             auto msgs = getFrenchMessages();
             return msgs[rand() % msgs.size()];
         }
