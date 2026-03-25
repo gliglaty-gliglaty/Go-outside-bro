@@ -45,6 +45,12 @@ public:
     void setup(std::string const& text) {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
+        auto bg = CCLayerColor::create(ccc4(0, 0, 0, 220), 360.f, 44.f);
+        if (bg) {
+            bg->setPosition(ccp(-180.f, -22.f));
+            this->addChild(bg);
+        }
+
         auto label = CCLabelBMFont::create(
             text.c_str(),
             "chatFont.fnt",
@@ -53,19 +59,19 @@ public:
         );
 
         if (label) {
-            label->setScale(0.8f);
+            label->setScale(0.78f);
             label->setPosition(CCPointZero);
             this->addChild(label);
         }
 
-        this->setPosition(ccp(winSize.width / 2, winSize.height + 30.f));
+        this->setPosition(ccp(winSize.width / 2, winSize.height + 35.f));
 
         auto moveIn = CCEaseSineOut::create(
-            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height - 20.f))
+            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height - 22.f))
         );
         auto delay = CCDelayTime::create(4.5f);
         auto moveOut = CCEaseSineIn::create(
-            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height + 30.f))
+            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height + 35.f))
         );
         auto cleanup = CCCallFunc::create(this, callfunc_selector(TopReminderNotification::removeSelf));
 
@@ -160,9 +166,10 @@ static std::string getRandomMessage() {
 }
 
 static void playReminderSound() {
-    auto soundPath = CCFileUtils::sharedFileUtils()->fullPathForFilename("reminder.mp3", false);
-    if (!soundPath.empty()) {
-        FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
+    auto path = Mod::get()->getResourcesDir() / "reminder.mp3";
+
+    if (std::filesystem::exists(path)) {
+        FMODAudioEngine::sharedEngine()->playEffect(path.string().c_str());
     }
     else {
         FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
