@@ -32,7 +32,7 @@ protected:
     float getReminderSeconds() {
         auto mod = Mod::get();
 
-        int amount = mod->getSettingValue<int64_t>("reminder-amount");
+        int amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
         std::string unit = mod->getSettingValue<std::string>("reminder-unit");
 
         if (amount < 1) amount = 1;
@@ -98,14 +98,6 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
             return false;
         }
 
-        auto logoPath = Mod::get()->getResourcesDir() / "gob.png";
-        auto logo = CCSprite::create(logoPath.string().c_str());
-        if (logo) {
-            logo->setScale(0.35f);
-            logo->setPosition(ccp(70.f, 260.f));
-            this->addChild(logo, 100);
-        }
-
         auto reminder = ReminderNode::create();
         this->addChild(reminder);
 
@@ -114,10 +106,5 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
 };
 
 $on_mod(Loaded) {
-    auto mod = Mod::get();
     log::info("Go outside, bro! loaded");
-
-    if (!mod->hasSetting("language")) {
-        log::info("Setting 'language' not found yet");
-    }
 }
