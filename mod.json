@@ -10,11 +10,10 @@
     "developer": "liminal studio",
     "description": "A mod to encourage you to go outside.",
     "tags": [
-        "fun",
+        "offline",
         "utility",
-        "reminder",
-        "notification",
-        "qol",
-        "meme"
+        "joke",
+        "interface",
+        "customization",
     ]
 }
