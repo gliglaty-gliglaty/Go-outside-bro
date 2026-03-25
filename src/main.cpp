@@ -27,7 +27,7 @@ static std::string formatTime(double totalSeconds) {
 
 class TopReminderNotification : public CCNode {
 protected:
-    CCSprite* m_bg = nullptr;
+    CCScale9Sprite* m_bg = nullptr;
     CCLabelBMFont* m_label = nullptr;
 
 public:
@@ -46,11 +46,10 @@ public:
     void setup(std::string const& text) {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-        m_bg = CCSprite::create("square02b_001.png");
+        m_bg = CCScale9Sprite::create("square02b_001.png");
         if (m_bg) {
-            m_bg->setScaleX(3.8f);
-            m_bg->setScaleY(0.9f);
-            m_bg->setOpacity(140);
+            m_bg->setContentSize(CCSize(340.f, 42.f));
+            m_bg->setOpacity(150);
             m_bg->setColor(ccc3(0, 0, 0));
             this->addChild(m_bg);
         }
@@ -63,16 +62,20 @@ public:
         );
 
         if (m_label) {
-            m_label->setScale(0.75f);
+            m_label->setScale(0.72f);
             m_label->setPosition(CCPointZero);
             this->addChild(m_label);
         }
 
-        this->setPosition(ccp(winSize.width / 2, winSize.height + 30.f));
+        this->setPosition(ccp(winSize.width / 2, winSize.height + 40.f));
 
-        auto moveIn = CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height - 25.f));
+        auto moveIn = CCEaseSineOut::create(
+            CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height - 25.f))
+        );
         auto delay = CCDelayTime::create(4.5f);
-        auto moveOut = CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height + 30.f));
+        auto moveOut = CCEaseSineIn::create(
+            CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height + 40.f))
+        );
         auto cleanup = CCCallFunc::create(this, callfunc_selector(TopReminderNotification::removeSelf));
 
         this->runAction(CCSequence::create(moveIn, delay, moveOut, cleanup, nullptr));
@@ -83,7 +86,7 @@ public:
     }
 };
 
-class ReminderNode : public CCNode {
+class ReminderManager : public CCNode {
 protected:
     float m_timer = 0.f;
     float m_testTimer = 0.f;
@@ -268,21 +271,34 @@ protected:
     }
 
     void playReminderSound() {
-        auto soundPath = (CCFileUtils::sharedFileUtils()->fullPathForFilename("reminder.mp3"));
-        FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
+        auto soundPath = CCFileUtils::sharedFileUtils()->fullPathForFilename("reminder.mp3");
+        if (!soundPath.empty()) {
+            FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
+        }
+        else {
+            FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
+        }
+    }
+
+    void attachNotificationToCurrentScene(std::string const& message) {
+        auto scene = CCDirector::sharedDirector()->getRunningScene();
+        if (!scene) return;
+
+        auto existing = scene->getChildByTag(987654);
+        if (existing) {
+            existing->removeFromParentAndCleanup(true);
+        }
+
+        auto notif = TopReminderNotification::create(message);
+        if (notif) {
+            notif->setTag(987654);
+            scene->addChild(notif, 999999);
+        }
     }
 
     void showReminderNow() {
         auto message = getRandomMessage();
-
-        auto scene = CCDirector::sharedDirector()->getRunningScene();
-        if (scene) {
-            auto notif = TopReminderNotification::create(message);
-            if (notif) {
-                scene->addChild(notif, 9999);
-            }
-        }
-
+        attachNotificationToCurrentScene(message);
         playReminderSound();
     }
 
@@ -314,17 +330,15 @@ protected:
             m_lastFrench = french;
             m_lastUseHours = useHours;
             m_lastAmount = amount;
-
-            log::info("Settings updated live");
         }
     }
 
 public:
-    static ReminderNode* create() {
-        auto ret = new ReminderNode();
+    static ReminderManager* create() {
+        auto ret = new ReminderManager();
         if (ret && ret->init()) {
             ret->autorelease();
-            ret->schedule(schedule_selector(ReminderNode::tick), 1.0f);
+            ret->schedule(schedule_selector(ReminderManager::tick), 1.0f);
 
             ret->m_lastNotificationsEnabled = ret->getNotificationsEnabled();
             ret->m_lastTestMode = ret->getTestMode();
@@ -349,7 +363,6 @@ public:
         m_timer += dt;
 
         auto mod = Mod::get();
-
         double totalTracked = mod->getSavedValue<double>("tracked-total-seconds", 0.0);
         totalTracked += dt;
         mod->setSavedValue("tracked-total-seconds", totalTracked);
@@ -377,14 +390,23 @@ public:
     }
 };
 
+static ReminderManager* g_manager = nullptr;
+
 class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) {
             return false;
         }
 
-        auto reminder = ReminderNode::create();
-        this->addChild(reminder);
+        if (!g_manager) {
+            g_manager = ReminderManager::create();
+            CCDirector::sharedDirector()->getScheduler()->scheduleSelector(
+                schedule_selector(ReminderManager::tick),
+                g_manager,
+                1.0f,
+                false
+            );
+        }
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
@@ -399,7 +421,6 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
 
         auto menu = CCMenu::create();
         menu->setPosition(CCPointZero);
-
         timeButton->setPosition(ccp(winSize.width - 50.f, winSize.height / 2 - 35.f));
 
         menu->addChild(timeButton);
@@ -409,7 +430,7 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     }
 
     void onOpenPlaytime(CCObject*) {
-        double totalTracked = ReminderNode::getTrackedTotalTime();
+        double totalTracked = ReminderManager::getTrackedTotalTime();
 
         std::string text =
             "Tracked playtime by this mod:\n" +
@@ -426,4 +447,14 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
 
 $on_mod(Loaded) {
     log::info("Go outside, bro! loaded");
+
+    if (!g_manager) {
+        g_manager = ReminderManager::create();
+        CCDirector::sharedDirector()->getScheduler()->scheduleSelector(
+            schedule_selector(ReminderManager::tick),
+            g_manager,
+            1.0f,
+            false
+        );
+    }
 }
