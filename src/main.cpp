@@ -45,35 +45,27 @@ public:
     void setup(std::string const& text) {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-        auto bg = CCScale9Sprite::create("square02b_001.png");
-        if (bg) {
-            bg->setContentSize(CCSize(340.f, 42.f));
-            bg->setOpacity(150);
-            bg->setColor(ccc3(0, 0, 0));
-            this->addChild(bg);
-        }
-
         auto label = CCLabelBMFont::create(
             text.c_str(),
             "chatFont.fnt",
-            300.f,
+            320.f,
             kCCTextAlignmentCenter
         );
 
         if (label) {
-            label->setScale(0.72f);
+            label->setScale(0.8f);
             label->setPosition(CCPointZero);
             this->addChild(label);
         }
 
-        this->setPosition(ccp(winSize.width / 2, winSize.height + 40.f));
+        this->setPosition(ccp(winSize.width / 2, winSize.height + 30.f));
 
         auto moveIn = CCEaseSineOut::create(
-            CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height - 25.f))
+            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height - 20.f))
         );
         auto delay = CCDelayTime::create(4.5f);
         auto moveOut = CCEaseSineIn::create(
-            CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height + 40.f))
+            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height + 30.f))
         );
         auto cleanup = CCCallFunc::create(this, callfunc_selector(TopReminderNotification::removeSelf));
 
