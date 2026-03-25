@@ -9,10 +9,10 @@ protected:
 
     std::vector<std::string> getFrenchMessages() {
         return {
-            "Il serait temps d'aller prendre une douche, frero.",
-            "Ca fait longtemps que tu joues. Va toucher de l'herbe.",
-            "Meme les modos Discord sont choques, bro.",
-            "Pourquoi tu ne vas pas voir ta famille un peu ?",
+            "Il serait temps d'aller se doucher, frero.",
+            "Ca fait un moment que tu joues. Va toucher de l'herbe.",
+            "Meme les modos Discord sont choques de ton temps de jeu, bro.",
+            "Pourquoi tu ne vas pas voir ta famille au lieu de jouer ?",
             "Frero, ca va dans ta vie pour jouer autant ??",
             "Stop... arrete de jouer."
         };
@@ -21,19 +21,21 @@ protected:
     std::vector<std::string> getEnglishMessages() {
         return {
             "It might be time to take a shower, bro.",
-            "You have been playing for a long time. Go touch some grass.",
-            "Even Discord mods are shocked, bro.",
-            "Why don't you go see your family for a bit?",
+            "You've been playing for a while. Go touch some grass.",
+            "Even Discord mods are shocked by your playtime, bro.",
+            "Why don't you go see your family instead of playing?",
             "Bro, are you okay to be playing this much??",
             "Stop... stop playing."
         };
     }
 
-    float getReminderInterval() {
+    float getReminderSeconds() {
         auto mod = Mod::get();
 
-        int amount = mod->getSavedValue<int>("reminder-amount", 30);
-        std::string unit = mod->getSavedValue<std::string>("reminder-unit", "minutes");
+        int amount = mod->getSettingValue<int64_t>("reminder-amount");
+        std::string unit = mod->getSettingValue<std::string>("reminder-unit");
+
+        if (amount < 1) amount = 1;
 
         if (unit == "hours") {
             return static_cast<float>(amount * 3600);
@@ -44,17 +46,15 @@ protected:
 
     std::string getRandomMessage() {
         auto mod = Mod::get();
-        std::string language = mod->getSavedValue<std::string>("language", "en");
+        std::string language = mod->getSettingValue<std::string>("language");
 
         if (language == "fr") {
             auto msgs = getFrenchMessages();
-            int index = rand() % msgs.size();
-            return msgs[index];
+            return msgs[rand() % msgs.size()];
         }
 
         auto msgs = getEnglishMessages();
-        int index = rand() % msgs.size();
-        return msgs[index];
+        return msgs[rand() % msgs.size()];
     }
 
 public:
@@ -73,10 +73,10 @@ public:
     void tick(float dt) {
         m_timer += dt;
 
-        float interval = getReminderInterval();
-        if (interval <= 0.f) return;
+        float needed = getReminderSeconds();
+        if (needed <= 0.f) return;
 
-        if (m_timer >= interval) {
+        if (m_timer >= needed) {
             m_timer = 0.f;
 
             auto message = getRandomMessage();
@@ -92,28 +92,12 @@ public:
     }
 };
 
-class $modify(GoOutsideMenuLayer, MenuLayer) {
+class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) {
             return false;
         }
 
-        
-        auto mod = Mod::get();
-
-        if (!mod->hasSavedValue("language")) {
-            mod->setSavedValue("language", std::string("en"));
-        }
-
-        if (!mod->hasSavedValue("reminder-amount")) {
-            mod->setSavedValue("reminder-amount", 30);
-        }
-
-        if (!mod->hasSavedValue("reminder-unit")) {
-            mod->setSavedValue("reminder-unit", std::string("minutes"));
-        }
-
-        
         auto reminder = ReminderNode::create();
         this->addChild(reminder);
 
@@ -123,19 +107,10 @@ class $modify(GoOutsideMenuLayer, MenuLayer) {
 
 $on_mod(Loaded) {
     auto mod = Mod::get();
-
     log::info("Go outside, bro! loaded");
 
-    
-    if (!mod->hasSavedValue("language")) {
-        mod->setSavedValue("language", std::string("en"));
-    }
-
-    if (!mod->hasSavedValue("reminder-amount")) {
-        mod->setSavedValue("reminder-amount", 30);
-    }
-
-    if (!mod->hasSavedValue("reminder-unit")) {
-        mod->setSavedValue("reminder-unit", std::string("minutes"));
+    // Valeurs de secours si les settings ne sont pas encore définis
+    if (!mod->hasSetting("language")) {
+        log::info("Setting 'language' not found yet");
     }
 }
