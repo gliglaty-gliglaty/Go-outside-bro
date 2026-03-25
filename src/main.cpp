@@ -64,14 +64,6 @@ static bool getWhiteTheme() {
         : false;
 }
 
-static float getNotificationVolume() {
-    auto mod = Mod::get();
-    if (mod->hasSetting("notification-volume")) {
-        return mod->getSettingValue<double>("notification-volume");
-    }
-    return 1.0f;
-}
-
 static int getReminderAmount() {
     auto mod = Mod::get();
     if (mod->hasSetting("reminder-amount")) {
@@ -199,8 +191,7 @@ static void playReminderSound() {
     auto path = Mod::get()->getResourcesDir() / "reminder.mp3";
 
     if (std::filesystem::exists(path)) {
-        float volume = std::clamp(getNotificationVolume(), 0.0f, 1.0f);
-        FMODAudioEngine::sharedEngine()->playEffect(path.string().c_str(), speed::normal, 0.0f, volume);
+        FMODAudioEngine::sharedEngine()->playEffect(path.string().c_str());
     }
     else {
         FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
