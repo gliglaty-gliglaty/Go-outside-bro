@@ -98,7 +98,8 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
             return false;
         }
 
-        auto logo = CCSprite::create("gob.png"_spr);
+        auto logoPath = Mod::get()->getResourcesDir() / "gob.png";
+        auto logo = CCSprite::create(logoPath.string().c_str());
         if (logo) {
             logo->setScale(0.35f);
             logo->setPosition(ccp(70.f, 260.f));
