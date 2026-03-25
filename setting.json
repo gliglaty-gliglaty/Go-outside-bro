@@ -1,0 +1,33 @@
+[
+    {
+        "key": "language",
+        "name": "Language",
+        "description": "Choose the language of the reminder messages.",
+        "type": "string",
+        "default": "en",
+        "enum": [
+            "en",
+            "fr"
+        ]
+    },
+    {
+        "key": "reminder-amount",
+        "name": "Reminder Amount",
+        "description": "How often the reminder should appear.",
+        "type": "int",
+        "default": 30,
+        "min": 1,
+        "max": 999
+    },
+    {
+        "key": "reminder-unit",
+        "name": "Reminder Unit",
+        "description": "Choose whether the reminder is in minutes or hours.",
+        "type": "string",
+        "default": "minutes",
+        "enum": [
+            "minutes",
+            "hours"
+        ]
+    }
+]
