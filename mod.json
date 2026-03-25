@@ -27,6 +27,12 @@
             "type": "bool",
             "default": true
         },
+        "test-mode": {
+            "name": "Test Mode",
+            "description": "If enabled, reminder notifications will appear every 5 seconds.",
+            "type": "bool",
+            "default": false
+        },
         "language-french": {
             "name": "French Language",
             "description": "Enable French messages. Disable for English.",
