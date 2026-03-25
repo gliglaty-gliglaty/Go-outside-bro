@@ -1,72 +1,140 @@
-# Go outside, bro!
+# 🌿 Go outside, bro!
 
-A Geode mod for Geometry Dash that reminds you to take a break and go outside.
+[![Geode](https://img.shields.io/badge/Geode-5.4.1-blue)](#)
+[![Geometry Dash](https://img.shields.io/badge/Geometry%20Dash-2.2081-brightgreen)](#)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-orange)](#)
+[![Developer](https://img.shields.io/badge/Developer-liminal%20studio-purple)](#)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Go--outside--bro-black?logo=github)](https://github.com/gliglaty-gliglaty/Go-outside-bro)
 
-## Features
+A funny **Geode** mod for **Geometry Dash** that reminds you to take breaks and also tracks how long you've played while the mod is installed. 😭🕒
 
-- Periodic reminder notifications while you play
-- English and French message support
-- Custom reminder interval
-- Choose between minutes or hours
-- Funny break reminder messages
-- Works on Windows and Android
+---
 
-## Settings
+## ✨ Features
 
-You can configure the mod from the Geode mod settings menu:
+- 🔔 Break reminder notifications
+- 🌍 English and French messages
+- ⏱️ Custom reminder interval
+- 🕐 Choose between **minutes** or **hours**
+- 🚫 Option to disable notifications and keep only the playtime tracker
+- 📊 Playtime tracker button in the main menu
+- 📱💻 Works on **Windows** and **Android**
 
-- **French Language**  
-  Enable French messages. Disable for English.
+---
 
-- **Reminder Amount**  
-  Set how often the notification appears.
+## 🧩 What the mod does
 
-- **Use Hours**  
-  Enable hours instead of minutes.
+This mod can do **2 main things**:
 
-## Example
+### 1️⃣ Reminder notifications
+After a custom amount of time, the mod shows a message telling you to take a break. 🌿
+
+You can configure:
+- ✅ notification enabled / disabled
+- 🌐 language
+- 🔢 interval amount
+- 🕒 minutes or hours
+
+### 2️⃣ Playtime tracker
+A **Time** button appears on the **right side of the main menu**.
+
+When you click it, a popup opens and shows:
+- 📈 the total playtime tracked by the mod
+
+---
+
+## ⚠️ Important note
+
+This mod **does not read your full Geometry Dash account lifetime playtime**.
+
+Instead, it tracks:
+- 🕹️ the time played **while this mod is installed and active**
+
+So the shown playtime is:
+- ✅ **mod tracked playtime**
+- ❌ **not** your complete account history since account creation
+
+---
+
+## ⚙️ Settings
+
+You can configure the mod from the **Geode mod settings menu**.
+
+### 🔔 Enable Notifications
+If enabled:
+- reminder notifications appear
+- sound plays with reminders
+
+If disabled:
+- no notifications are shown
+- playtime tracking still continues
+
+### 🇫🇷 French Language
+- Enabled = French messages
+- Disabled = English messages
+
+### 🔢 Reminder Amount
+Controls how often reminders appear.
+
+### 🕐 Use Hours
+- Enabled = reminder uses **hours**
+- Disabled = reminder uses **minutes**
+
+---
+
+## 📌 Example
 
 If you set:
 
-- Reminder Amount: `30`
-- Use Hours: `off`
+- **Enable Notifications** = On ✅
+- **Reminder Amount** = 30
+- **Use Hours** = Off
 
-The mod will show a notification every **30 minutes**.
+You will receive a reminder every **30 minutes**. ⏰
 
 If you set:
 
-- Reminder Amount: `2`
-- Use Hours: `on`
+- **Enable Notifications** = Off 🚫
 
-The mod will show a notification every **2 hours**.
+The mod will only track your playtime and the **Time** button will still work. 📊
 
-## Messages
+---
 
-The mod randomly displays reminder messages such as:
+## 🖱️ Main Menu Button
 
-- "It might be time to take a shower, bro."
-- "You've been playing for a while. Go touch some grass."
-- "Stop... stop playing."
+The mod adds a **Time** button on the **right side of the main menu**.
 
-French versions are also included.
+This button opens a popup showing your tracked playtime. 🕒
 
-## Supported Versions
+---
 
-- **Geode:** 5.4.1
-- **Geometry Dash:** 2.2081
-- **Platforms:** Windows, Android
+## 🖥️📱 Platforms
 
-## Build
+Supported platforms:
+- 💻 **Windows**
+- 📱 **Android**
 
-This repository includes GitHub Actions workflows for building:
+Supported **Geometry Dash** version:
+- 🎮 **2.2081**
 
-- **Windows**
-- **Android**
+Supported **Geode** version:
+- 🧩 **5.4.1**
 
-## Developer
+---
+
+## 🔗 Repository
+
+GitHub:  
+👉 https://github.com/gliglaty-gliglaty/Go-outside-bro
+
+---
+
+## 👨‍💻 Developer
 
 **liminal studio**
 
-## Description
+---
 
-*A mod to encourage you to go outside.*
+## 📝 Description
+
+*A mod to encourage you to go outside.* 🌤️
