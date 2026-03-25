@@ -1,333 +1,57 @@
-#include <Geode/Geode.hpp>
-#include <Geode/modify/MenuLayer.hpp>
-
-using namespace geode::prelude;
-
-static std::string formatTime(double totalSeconds) {
-    int seconds = static_cast<int>(totalSeconds);
-
-    int days = seconds / 86400;
-    seconds %= 86400;
-
-    int hours = seconds / 3600;
-    seconds %= 3600;
-
-    int minutes = seconds / 60;
-    seconds %= 60;
-
-    std::string result;
-
-    if (days > 0) result += std::to_string(days) + "d ";
-    if (hours > 0 || days > 0) result += std::to_string(hours) + "h ";
-    if (minutes > 0 || hours > 0 || days > 0) result += std::to_string(minutes) + "m ";
-    result += std::to_string(seconds) + "s";
-
-    return result;
-}
-
-class ReminderNode : public CCNode {
-protected:
-    float m_timer = 0.f;
-
-    bool m_lastNotificationsEnabled = true;
-    bool m_lastFrench = false;
-    bool m_lastUseHours = false;
-    int m_lastAmount = 30;
-
-    std::vector<std::string> getFrenchMessages() {
-        return {
-            "Il serait temps d'aller se doucher, frero.",
-            "Ca fait un moment que tu joues. Va toucher de l'herbe.",
-            "Meme les modos Discord sont choques de ton temps de jeu, bro.",
-            "Pourquoi tu ne vas pas voir ta famille au lieu de jouer ?",
-            "Frero, ca va dans ta vie pour jouer autant ??",
-            "Stop... arrete de jouer.",
-            "Va prendre l'air deux minutes.",
-            "Tes yeux meritent une pause, bro.",
-            "Tu joues depuis un bon moment deja.",
-            "Petit rappel : le soleil existe encore.",
-            "Va boire de l'eau, champion.",
-            "Une pause ne va pas detruire ton skill.",
-            "Le dehors n'est pas si effrayant, promis.",
-            "Fais une pause, ton dos te remercie.",
-            "L'herbe te manque probablement.",
-            "Va respirer un peu hors de ta chambre.",
-            "Ton ecran ne va pas s'enfuir.",
-            "Tu peux revenir apres une petite pause.",
-            "Il est peut-etre temps de cligner des yeux.",
-            "Va marcher un peu, juste un peu.",
-            "Ton corps demande une pause.",
-            "Le monde exterieur pense a toi.",
-            "Va voir la lumiere du jour.",
-            "Pause rapide obligatoire, bro.",
-            "Prends soin de toi au lieu de grind non-stop.",
-            "Tes jambes existent aussi, utilise-les.",
-            "Va t'etirer un peu.",
-            "Le jeu sera encore la dans cinq minutes.",
-            "Tu peux souffler un instant.",
-            "C'est l'heure d'une mini pause.",
-            "Le salon, la cuisine, le balcon... choisis une destination.",
-            "Essaie de ne pas fusionner avec ta chaise.",
-            "Ton corps n'est pas un setup RGB.",
-            "Va faire un tour avant de devenir un PNJ.",
-            "Le dehors t'appelle doucement.",
-            "Bro, prends une pause avant de devenir legendaire dans le mauvais sens.",
-            "Tu peux poser le jeu une minute, promis.",
-            "Une petite pause = meilleur grind ensuite.",
-            "Va detendre tes epaules.",
-            "Tu as pense a boire quelque chose ?",
-            "Va respirer de l'air frais.",
-            "Tu farmes les niveaux, mais pense a te reposer.",
-            "Le grind c'est bien, la survie aussi.",
-            "Petit check-up : tu es encore vivant ?",
-            "Va te lever de cette chaise, heros.",
-            "Le mode statue est active depuis trop longtemps.",
-            "Une pause maintenant, c'est une victoire plus tard.",
-            "Va faire quelques pas.",
-            "Laisse ton cerveau charger un peu.",
-            "Une pause courte peut sauver ton humeur."
-        };
-    }
-
-    std::vector<std::string> getEnglishMessages() {
-        return {
-            "It might be time to take a shower, bro.",
-            "You've been playing for a while. Go touch some grass.",
-            "Even Discord mods are shocked by your playtime, bro.",
-            "Why don't you go see your family instead of playing?",
-            "Bro, are you okay to be playing this much??",
-            "Stop... stop playing.",
-            "Go get some fresh air for a minute.",
-            "Your eyes deserve a break, bro.",
-            "You've been playing for quite a while already.",
-            "Reminder: the sun still exists.",
-            "Go drink some water, champion.",
-            "A short break won't ruin your skill.",
-            "The outside world is not that scary, promise.",
-            "Take a break, your back will thank you.",
-            "The grass probably misses you.",
-            "Go breathe outside your room for a bit.",
-            "Your screen is not going anywhere.",
-            "You can come back after a short break.",
-            "It may be time to blink again.",
-            "Go walk around a little.",
-            "Your body is asking for a break.",
-            "The outside world is thinking about you.",
-            "Go look at daylight for a moment.",
-            "Quick break required, bro.",
-            "Take care of yourself instead of grinding non-stop.",
-            "Your legs still exist, use them.",
-            "Go stretch a little.",
-            "The game will still be here in five minutes.",
-            "You can breathe for a second.",
-            "It's time for a mini break.",
-            "The living room, kitchen, balcony... choose a destination.",
-            "Try not to merge with your chair.",
-            "Your body is not an RGB setup.",
-            "Go outside before you become an NPC.",
-            "The outside is calling you softly.",
-            "Bro, take a break before becoming legendary in the wrong way.",
-            "You can put the game down for a minute, trust me.",
-            "A short break means better grinding later.",
-            "Go relax your shoulders.",
-            "Have you thought about drinking something?",
-            "Go get some fresh air.",
-            "You're farming levels, but remember to rest too.",
-            "Grinding is good, surviving is also good.",
-            "Quick check: are you still alive?",
-            "Stand up from that chair, hero.",
-            "Statue mode has been active for too long.",
-            "A break now is a win later.",
-            "Go take a few steps.",
-            "Let your brain load for a bit.",
-            "A short break can save your mood."
-        };
-    }
-
-    bool getNotificationsEnabled() {
-        auto mod = Mod::get();
-        if (mod->hasSetting("enable-notifications")) {
-            return mod->getSettingValue<bool>("enable-notifications");
-        }
-        return true;
-    }
-
-    bool getFrenchEnabled() {
-        auto mod = Mod::get();
-        if (mod->hasSetting("language-french")) {
-            return mod->getSettingValue<bool>("language-french");
-        }
-        return false;
-    }
-
-    bool getUseHours() {
-        auto mod = Mod::get();
-        if (mod->hasSetting("reminder-hours")) {
-            return mod->getSettingValue<bool>("reminder-hours");
-        }
-        return false;
-    }
-
-    int getReminderAmount() {
-        auto mod = Mod::get();
-        if (mod->hasSetting("reminder-amount")) {
-            int amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
-            if (amount < 1) amount = 1;
-            return amount;
-        }
-        return 30;
-    }
-
-    float getReminderSeconds() {
-        int amount = getReminderAmount();
-        bool useHours = getUseHours();
-
-        if (useHours) {
-            return static_cast<float>(amount * 3600);
-        }
-
-        return static_cast<float>(amount * 60);
-    }
-
-    std::string getRandomMessage() {
-        if (getFrenchEnabled()) {
-            auto msgs = getFrenchMessages();
-            return msgs[rand() % msgs.size()];
-        }
-
-        auto msgs = getEnglishMessages();
-        return msgs[rand() % msgs.size()];
-    }
-
-    void refreshSettingsState() {
-        bool notificationsEnabled = getNotificationsEnabled();
-        bool french = getFrenchEnabled();
-        bool useHours = getUseHours();
-        int amount = getReminderAmount();
-
-        if (
-            notificationsEnabled != m_lastNotificationsEnabled ||
-            french != m_lastFrench ||
-            useHours != m_lastUseHours ||
-            amount != m_lastAmount
-        ) {
-            if (useHours != m_lastUseHours || amount != m_lastAmount) {
-                m_timer = 0.f;
-            }
-
-            m_lastNotificationsEnabled = notificationsEnabled;
-            m_lastFrench = french;
-            m_lastUseHours = useHours;
-            m_lastAmount = amount;
-
-            log::info("Settings updated live");
+{
+    "geode": "5.4.1",
+    "gd": {
+        "win": "2.2081",
+        "android": "2.2081"
+    },
+    "id": "liminalstudio.gooutsidebro",
+    "name": "Go outside, bro!",
+    "version": "1.0.0",
+    "developer": "liminal studio",
+    "description": "A mod to encourage you to go outside.",
+    "tags": [
+        "offline",
+        "utility",
+        "joke",
+        "interface",
+        "customization"
+    ],
+    "links": {
+        "source": "https://github.com/gliglaty-gliglaty/Go-outside-bro",
+        "community": "https://github.com/gliglaty-gliglaty/Go-outside-bro"
+    },
+    "settings": {
+        "enable-notifications": {
+            "name": "Enable Notifications",
+            "description": "Disable this if you only want the playtime tracker.",
+            "type": "bool",
+            "default": true
+        },
+        "test-mode": {
+            "name": "Test Mode",
+            "description": "If enabled, reminder notifications will appear every 5 seconds.",
+            "type": "bool",
+            "default": false
+        },
+        "language-french": {
+            "name": "French Language",
+            "description": "Enable French messages. Disable for English.",
+            "type": "bool",
+            "default": false
+        },
+        "reminder-amount": {
+            "name": "Reminder Amount",
+            "description": "How often the reminder should appear.",
+            "type": "int",
+            "default": 30,
+            "min": 1,
+            "max": 999
+        },
+        "reminder-hours": {
+            "name": "Use Hours",
+            "description": "Enable hours. Disable for minutes.",
+            "type": "bool",
+            "default": false
         }
     }
-
-public:
-    static ReminderNode* create() {
-        auto ret = new ReminderNode();
-        if (ret && ret->init()) {
-            ret->autorelease();
-            ret->schedule(schedule_selector(ReminderNode::tick), 1.0f);
-
-            ret->m_lastNotificationsEnabled = ret->getNotificationsEnabled();
-            ret->m_lastFrench = ret->getFrenchEnabled();
-            ret->m_lastUseHours = ret->getUseHours();
-            ret->m_lastAmount = ret->getReminderAmount();
-
-            return ret;
-        }
-
-        CC_SAFE_DELETE(ret);
-        return nullptr;
-    }
-
-    static double getTrackedTotalTime() {
-        return Mod::get()->getSavedValue<double>("tracked-total-seconds", 0.0);
-    }
-
-    void tick(float dt) {
-        refreshSettingsState();
-
-        m_timer += dt;
-
-        auto mod = Mod::get();
-
-        double totalTracked = mod->getSavedValue<double>("tracked-total-seconds", 0.0);
-        totalTracked += dt;
-        mod->setSavedValue("tracked-total-seconds", totalTracked);
-
-        if (!getNotificationsEnabled()) {
-            return;
-        }
-
-        float needed = getReminderSeconds();
-        if (needed <= 0.f) return;
-
-        if (m_timer >= needed) {
-            m_timer = 0.f;
-
-            auto message = getRandomMessage();
-
-            auto notif = Notification::create(
-                message,
-                NotificationIcon::Info,
-                4.5f
-            );
-
-            if (notif) {
-                notif->show();
-            }
-
-            auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
-            FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
-        }
-    }
-};
-
-class $modify(GoOutsideBroMenuLayer, MenuLayer) {
-    bool init() {
-        if (!MenuLayer::init()) {
-            return false;
-        }
-
-        auto reminder = ReminderNode::create();
-        this->addChild(reminder);
-
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-
-        auto sprite = ButtonSprite::create("Time");
-        auto button = CCMenuItemSpriteExtra::create(
-            sprite,
-            this,
-            menu_selector(GoOutsideBroMenuLayer::onOpenPlaytime)
-        );
-
-        auto menu = CCMenu::create();
-        menu->setPosition(ccp(winSize.width - 55.f, winSize.height / 2));
-        menu->addChild(button);
-        this->addChild(menu, 100);
-
-        return true;
-    }
-
-    void onOpenPlaytime(CCObject*) {
-        double totalTracked = ReminderNode::getTrackedTotalTime();
-
-        std::string text =
-            "Tracked playtime by this mod:\n" +
-            formatTime(totalTracked) +
-            "\n\nThis is the time tracked since the mod was installed,\nnot the full account lifetime playtime.";
-
-        FLAlertLayer::create(
-            "Playtime Tracker",
-            text,
-            "OK"
-        )->show();
-    }
-};
-
-$on_mod(Loaded) {
-    log::info("Go outside, bro! loaded");
 }
