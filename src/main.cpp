@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
-#include <Geode/modify/PlayLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -15,7 +14,51 @@ protected:
             "Meme les modos Discord sont choques de ton temps de jeu, bro.",
             "Pourquoi tu ne vas pas voir ta famille au lieu de jouer ?",
             "Frero, ca va dans ta vie pour jouer autant ??",
-            "Stop... arrete de jouer."
+            "Stop... arrete de jouer.",
+            "Va prendre l'air deux minutes.",
+            "Tes yeux meritent une pause, bro.",
+            "Tu joues depuis un bon moment deja.",
+            "Petit rappel : le soleil existe encore.",
+            "Va boire de l'eau, champion.",
+            "Une pause ne va pas detruire ton skill.",
+            "Le dehors n'est pas si effrayant, promis.",
+            "Fais une pause, ton dos te remercie.",
+            "L'herbe te manque probablement.",
+            "Va respirer un peu hors de ta chambre.",
+            "Ton ecran ne va pas s'enfuir.",
+            "Tu peux revenir apres une petite pause.",
+            "Il est peut-etre temps de cligner des yeux.",
+            "Va marcher un peu, juste un peu.",
+            "Ton corps demande une pause.",
+            "Le monde exterieur pense a toi.",
+            "Va voir la lumiere du jour.",
+            "Pause rapide obligatoire, bro.",
+            "Prends soin de toi au lieu de grind non-stop.",
+            "Tes jambes existent aussi, utilise-les.",
+            "Va t'etirer un peu.",
+            "Le jeu sera encore la dans cinq minutes.",
+            "Tu peux souffler un instant.",
+            "C'est l'heure d'une mini pause.",
+            "Le salon, la cuisine, le balcon... choisis une destination.",
+            "Essaie de ne pas fusionner avec ta chaise.",
+            "Ton corps n'est pas un setup RGB.",
+            "Va faire un tour avant de devenir un PNJ.",
+            "Le dehors t'appelle doucement.",
+            "Bro, prends une pause avant de devenir legendaire dans le mauvais sens.",
+            "Tu peux poser le jeu une minute, promis.",
+            "Une petite pause = meilleur grind ensuite.",
+            "Va detendre tes epaules.",
+            "Tu as pense a boire quelque chose ?",
+            "Va respirer de l'air frais.",
+            "Tu farmes les niveaux, mais pense a te reposer.",
+            "Le grind c'est bien, la survie aussi.",
+            "Petit check-up : tu es encore vivant ?",
+            "Va te lever de cette chaise, heros.",
+            "Le mode statue est active depuis trop longtemps.",
+            "Une pause maintenant, c'est une victoire plus tard.",
+            "Va faire quelques pas.",
+            "Laisse ton cerveau charger un peu.",
+            "Une pause courte peut sauver ton humeur."
         };
     }
 
@@ -26,21 +69,56 @@ protected:
             "Even Discord mods are shocked by your playtime, bro.",
             "Why don't you go see your family instead of playing?",
             "Bro, are you okay to be playing this much??",
-            "Stop... stop playing."
+            "Stop... stop playing.",
+            "Go get some fresh air for a minute.",
+            "Your eyes deserve a break, bro.",
+            "You've been playing for quite a while already.",
+            "Reminder: the sun still exists.",
+            "Go drink some water, champion.",
+            "A short break won't ruin your skill.",
+            "The outside world is not that scary, promise.",
+            "Take a break, your back will thank you.",
+            "The grass probably misses you.",
+            "Go breathe outside your room for a bit.",
+            "Your screen is not going anywhere.",
+            "You can come back after a short break.",
+            "It may be time to blink again.",
+            "Go walk around a little.",
+            "Your body is asking for a break.",
+            "The outside world is thinking about you.",
+            "Go look at daylight for a moment.",
+            "Quick break required, bro.",
+            "Take care of yourself instead of grinding non-stop.",
+            "Your legs still exist, use them.",
+            "Go stretch a little.",
+            "The game will still be here in five minutes.",
+            "You can breathe for a second.",
+            "It's time for a mini break.",
+            "The living room, kitchen, balcony... choose a destination.",
+            "Try not to merge with your chair.",
+            "Your body is not an RGB setup.",
+            "Go outside before you become an NPC.",
+            "The outside is calling you softly.",
+            "Bro, take a break before becoming legendary in the wrong way.",
+            "You can put the game down for a minute, trust me.",
+            "A short break means better grinding later.",
+            "Go relax your shoulders.",
+            "Have you thought about drinking something?",
+            "Go get some fresh air.",
+            "You're farming levels, but remember to rest too.",
+            "Grinding is good, surviving is also good.",
+            "Quick check: are you still alive?",
+            "Stand up from that chair, hero.",
+            "Statue mode has been active for too long.",
+            "A break now is a win later.",
+            "Go take a few steps.",
+            "Let your brain load for a bit.",
+            "A short break can save your mood."
         };
     }
 
     float getReminderSeconds() {
         auto mod = Mod::get();
-
-        bool testMode = false;
-        if (mod->hasSetting("test-mode")) {
-            testMode = mod->getSettingValue<bool>("test-mode");
-        }
-
-        if (testMode) {
-            return 5.f;
-        }
 
         int amount = 30;
         bool useHours = false;
@@ -79,16 +157,8 @@ protected:
         return msgs[rand() % msgs.size()];
     }
 
-    void showReminder() {
-        auto message = getRandomMessage();
-
-        Notification::create(
-            "Go outside, bro!\n" + message,
-            NotificationIcon::Info,
-            4.0f
-        )->show();
-
-        FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
+    float getNotificationTime() {
+        return 4.5f;
     }
 
 public:
@@ -112,20 +182,24 @@ public:
 
         if (m_timer >= needed) {
             m_timer = 0.f;
-            showReminder();
+
+            auto message = getRandomMessage();
+
+            auto notif = Notification::create(
+                message,
+                NotificationIcon::Info,
+                getNotificationTime()
+            );
+
+            if (notif) {
+                notif->show();
+            }
+
+            auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
+            FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
         }
     }
 };
-
-static void attachReminderNode(CCNode* parent) {
-    if (!parent) return;
-
-    if (parent->getChildByID("gooutside-reminder-node")) return;
-
-    auto reminder = ReminderNode::create();
-    reminder->setID("gooutside-reminder-node");
-    parent->addChild(reminder, 9999);
-}
 
 class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
@@ -133,18 +207,9 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
             return false;
         }
 
-        attachReminderNode(this);
-        return true;
-    }
-};
+        auto reminder = ReminderNode::create();
+        this->addChild(reminder);
 
-class $modify(GoOutsideBroPlayLayer, PlayLayer) {
-    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
-        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
-            return false;
-        }
-
-        attachReminderNode(this);
         return true;
     }
 };
