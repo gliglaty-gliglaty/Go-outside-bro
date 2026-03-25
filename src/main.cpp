@@ -29,60 +29,6 @@ static std::string formatTime(double totalSeconds) {
     return result;
 }
 
-class TopReminderNotification : public CCNode {
-public:
-    static TopReminderNotification* create(std::string const& text) {
-        auto ret = new TopReminderNotification();
-        if (ret && ret->init()) {
-            ret->autorelease();
-            ret->setup(text);
-            return ret;
-        }
-        CC_SAFE_DELETE(ret);
-        return nullptr;
-    }
-
-    void setup(std::string const& text) {
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-
-        auto bg = CCLayerColor::create(ccc4(0, 0, 0, 220), 360.f, 44.f);
-        if (bg) {
-            bg->setPosition(ccp(-180.f, -22.f));
-            this->addChild(bg);
-        }
-
-        auto label = CCLabelBMFont::create(
-            text.c_str(),
-            "chatFont.fnt",
-            320.f,
-            kCCTextAlignmentCenter
-        );
-
-        if (label) {
-            label->setScale(0.78f);
-            label->setPosition(CCPointZero);
-            this->addChild(label);
-        }
-
-        this->setPosition(ccp(winSize.width / 2, winSize.height + 35.f));
-
-        auto moveIn = CCEaseSineOut::create(
-            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height - 22.f))
-        );
-        auto delay = CCDelayTime::create(4.5f);
-        auto moveOut = CCEaseSineIn::create(
-            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height + 35.f))
-        );
-        auto cleanup = CCCallFunc::create(this, callfunc_selector(TopReminderNotification::removeSelf));
-
-        this->runAction(CCSequence::create(moveIn, delay, moveOut, cleanup, nullptr));
-    }
-
-    void removeSelf() {
-        this->removeFromParentAndCleanup(true);
-    }
-};
-
 static bool getNotificationsEnabled() {
     auto mod = Mod::get();
     return mod->hasSetting("enable-notifications")
@@ -109,6 +55,21 @@ static bool getUseHours() {
     return mod->hasSetting("reminder-hours")
         ? mod->getSettingValue<bool>("reminder-hours")
         : false;
+}
+
+static bool getWhiteTheme() {
+    auto mod = Mod::get();
+    return mod->hasSetting("notification-theme-white")
+        ? mod->getSettingValue<bool>("notification-theme-white")
+        : false;
+}
+
+static float getNotificationVolume() {
+    auto mod = Mod::get();
+    if (mod->hasSetting("notification-volume")) {
+        return mod->getSettingValue<double>("notification-volume");
+    }
+    return 1.0f;
 }
 
 static int getReminderAmount() {
@@ -165,11 +126,81 @@ static std::string getRandomMessage() {
     return msgs[rand() % msgs.size()];
 }
 
+class TopReminderNotification : public CCNode {
+public:
+    static TopReminderNotification* create(std::string const& text) {
+        auto ret = new TopReminderNotification();
+        if (ret && ret->init()) {
+            ret->autorelease();
+            ret->setup(text);
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
+    }
+
+    void setup(std::string const& text) {
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+
+        auto bg = CCScale9Sprite::create("square02b_001.png");
+        if (bg) {
+            bg->setContentSize(CCSize(360.f, 44.f));
+            bg->setOpacity(220);
+
+            if (getWhiteTheme()) {
+                bg->setColor(ccc3(255, 255, 255));
+            } else {
+                bg->setColor(ccc3(0, 0, 0));
+            }
+
+            this->addChild(bg);
+        }
+
+        auto label = CCLabelBMFont::create(
+            text.c_str(),
+            "chatFont.fnt",
+            320.f,
+            kCCTextAlignmentCenter
+        );
+
+        if (label) {
+            label->setScale(0.78f);
+            label->setPosition(CCPointZero);
+
+            if (getWhiteTheme()) {
+                label->setColor(ccc3(0, 0, 0));
+            } else {
+                label->setColor(ccc3(255, 255, 255));
+            }
+
+            this->addChild(label);
+        }
+
+        this->setPosition(ccp(winSize.width / 2, winSize.height + 35.f));
+
+        auto moveIn = CCEaseSineOut::create(
+            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height - 22.f))
+        );
+        auto delay = CCDelayTime::create(4.5f);
+        auto moveOut = CCEaseSineIn::create(
+            CCMoveTo::create(0.2f, ccp(winSize.width / 2, winSize.height + 35.f))
+        );
+        auto cleanup = CCCallFunc::create(this, callfunc_selector(TopReminderNotification::removeSelf));
+
+        this->runAction(CCSequence::create(moveIn, delay, moveOut, cleanup, nullptr));
+    }
+
+    void removeSelf() {
+        this->removeFromParentAndCleanup(true);
+    }
+};
+
 static void playReminderSound() {
     auto path = Mod::get()->getResourcesDir() / "reminder.mp3";
 
     if (std::filesystem::exists(path)) {
-        FMODAudioEngine::sharedEngine()->playEffect(path.string().c_str());
+        float volume = std::clamp(getNotificationVolume(), 0.0f, 1.0f);
+        FMODAudioEngine::sharedEngine()->playEffect(path.string().c_str(), speed::normal, 0.0f, volume);
     }
     else {
         FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
