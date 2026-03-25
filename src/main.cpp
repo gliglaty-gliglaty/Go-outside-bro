@@ -271,7 +271,7 @@ protected:
     }
 
     void playReminderSound() {
-        auto soundPath = CCFileUtils::sharedFileUtils()->fullPathForFilename("reminder.mp3");
+        auto soundPath = CCFileUtils::sharedFileUtils()->fullPathForFilename("reminder.mp3", false);
         if (!soundPath.empty()) {
             FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
         }
@@ -398,16 +398,6 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
             return false;
         }
 
-        if (!g_manager) {
-            g_manager = ReminderManager::create();
-            CCDirector::sharedDirector()->getScheduler()->scheduleSelector(
-                schedule_selector(ReminderManager::tick),
-                g_manager,
-                1.0f,
-                false
-            );
-        }
-
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
         auto timeSprite = ButtonSprite::create("Time");
@@ -450,11 +440,5 @@ $on_mod(Loaded) {
 
     if (!g_manager) {
         g_manager = ReminderManager::create();
-        CCDirector::sharedDirector()->getScheduler()->scheduleSelector(
-            schedule_selector(ReminderManager::tick),
-            g_manager,
-            1.0f,
-            false
-        );
     }
 }
