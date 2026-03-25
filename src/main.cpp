@@ -93,13 +93,14 @@ public:
 
             auto message = getRandomMessage();
 
-            Notification::create(
+            FLAlertLayer::create(
+                "Go outside, bro!",
                 message,
-                NotificationIcon::Info,
-                4.0f
+                "OK"
             )->show();
 
-            FMODAudioEngine::sharedEngine()->playEffect("achievement_01.ogg");
+            auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
+            FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
         }
     }
 };
