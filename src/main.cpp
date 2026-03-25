@@ -29,6 +29,11 @@ class ReminderNode : public CCNode {
 protected:
     float m_timer = 0.f;
 
+    bool m_lastNotificationsEnabled = true;
+    bool m_lastFrench = false;
+    bool m_lastUseHours = false;
+    int m_lastAmount = 30;
+
     std::vector<std::string> getFrenchMessages() {
         return {
             "Il serait temps d'aller se doucher, frero.",
@@ -139,21 +144,43 @@ protected:
         };
     }
 
-    float getReminderSeconds() {
+    bool getNotificationsEnabled() {
         auto mod = Mod::get();
-
-        int amount = 30;
-        bool useHours = false;
-
-        if (mod->hasSetting("reminder-amount")) {
-            amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
+        if (mod->hasSetting("enable-notifications")) {
+            return mod->getSettingValue<bool>("enable-notifications");
         }
+        return true;
+    }
 
+    bool getFrenchEnabled() {
+        auto mod = Mod::get();
+        if (mod->hasSetting("language-french")) {
+            return mod->getSettingValue<bool>("language-french");
+        }
+        return false;
+    }
+
+    bool getUseHours() {
+        auto mod = Mod::get();
         if (mod->hasSetting("reminder-hours")) {
-            useHours = mod->getSettingValue<bool>("reminder-hours");
+            return mod->getSettingValue<bool>("reminder-hours");
         }
+        return false;
+    }
 
-        if (amount < 1) amount = 1;
+    int getReminderAmount() {
+        auto mod = Mod::get();
+        if (mod->hasSetting("reminder-amount")) {
+            int amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
+            if (amount < 1) amount = 1;
+            return amount;
+        }
+        return 30;
+    }
+
+    float getReminderSeconds() {
+        int amount = getReminderAmount();
+        bool useHours = getUseHours();
 
         if (useHours) {
             return static_cast<float>(amount * 3600);
@@ -163,14 +190,7 @@ protected:
     }
 
     std::string getRandomMessage() {
-        auto mod = Mod::get();
-        bool french = false;
-
-        if (mod->hasSetting("language-french")) {
-            french = mod->getSettingValue<bool>("language-french");
-        }
-
-        if (french) {
+        if (getFrenchEnabled()) {
             auto msgs = getFrenchMessages();
             return msgs[rand() % msgs.size()];
         }
@@ -179,12 +199,43 @@ protected:
         return msgs[rand() % msgs.size()];
     }
 
+    void refreshSettingsState() {
+        bool notificationsEnabled = getNotificationsEnabled();
+        bool french = getFrenchEnabled();
+        bool useHours = getUseHours();
+        int amount = getReminderAmount();
+
+        if (
+            notificationsEnabled != m_lastNotificationsEnabled ||
+            french != m_lastFrench ||
+            useHours != m_lastUseHours ||
+            amount != m_lastAmount
+        ) {
+            if (useHours != m_lastUseHours || amount != m_lastAmount) {
+                m_timer = 0.f;
+            }
+
+            m_lastNotificationsEnabled = notificationsEnabled;
+            m_lastFrench = french;
+            m_lastUseHours = useHours;
+            m_lastAmount = amount;
+
+            log::info("Settings updated live");
+        }
+    }
+
 public:
     static ReminderNode* create() {
         auto ret = new ReminderNode();
         if (ret && ret->init()) {
             ret->autorelease();
             ret->schedule(schedule_selector(ReminderNode::tick), 1.0f);
+
+            ret->m_lastNotificationsEnabled = ret->getNotificationsEnabled();
+            ret->m_lastFrench = ret->getFrenchEnabled();
+            ret->m_lastUseHours = ret->getUseHours();
+            ret->m_lastAmount = ret->getReminderAmount();
+
             return ret;
         }
 
@@ -197,6 +248,8 @@ public:
     }
 
     void tick(float dt) {
+        refreshSettingsState();
+
         m_timer += dt;
 
         auto mod = Mod::get();
@@ -205,12 +258,7 @@ public:
         totalTracked += dt;
         mod->setSavedValue("tracked-total-seconds", totalTracked);
 
-        bool notificationsEnabled = true;
-        if (mod->hasSetting("enable-notifications")) {
-            notificationsEnabled = mod->getSettingValue<bool>("enable-notifications");
-        }
-
-        if (!notificationsEnabled) {
+        if (!getNotificationsEnabled()) {
             return;
         }
 
