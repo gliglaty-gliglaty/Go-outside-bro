@@ -25,6 +25,64 @@ static std::string formatTime(double totalSeconds) {
     return result;
 }
 
+class TopReminderNotification : public CCNode {
+protected:
+    CCSprite* m_bg = nullptr;
+    CCLabelBMFont* m_label = nullptr;
+
+public:
+    static TopReminderNotification* create(std::string const& text) {
+        auto ret = new TopReminderNotification();
+        if (ret && ret->init()) {
+            ret->autorelease();
+            ret->setup(text);
+            return ret;
+        }
+
+        CC_SAFE_DELETE(ret);
+        return nullptr;
+    }
+
+    void setup(std::string const& text) {
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+
+        m_bg = CCSprite::create("square02b_001.png");
+        if (m_bg) {
+            m_bg->setScaleX(3.8f);
+            m_bg->setScaleY(0.9f);
+            m_bg->setOpacity(140);
+            m_bg->setColor(ccc3(0, 0, 0));
+            this->addChild(m_bg);
+        }
+
+        m_label = CCLabelBMFont::create(
+            text.c_str(),
+            "chatFont.fnt",
+            300.f,
+            kCCTextAlignmentCenter
+        );
+
+        if (m_label) {
+            m_label->setScale(0.75f);
+            m_label->setPosition(CCPointZero);
+            this->addChild(m_label);
+        }
+
+        this->setPosition(ccp(winSize.width / 2, winSize.height + 30.f));
+
+        auto moveIn = CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height - 25.f));
+        auto delay = CCDelayTime::create(4.5f);
+        auto moveOut = CCMoveTo::create(0.25f, ccp(winSize.width / 2, winSize.height + 30.f));
+        auto cleanup = CCCallFunc::create(this, callfunc_selector(TopReminderNotification::removeSelf));
+
+        this->runAction(CCSequence::create(moveIn, delay, moveOut, cleanup, nullptr));
+    }
+
+    void removeSelf() {
+        this->removeFromParentAndCleanup(true);
+    }
+};
+
 class ReminderNode : public CCNode {
 protected:
     float m_timer = 0.f;
@@ -210,21 +268,19 @@ protected:
     }
 
     void playReminderSound() {
-        auto soundPath = (Mod::get()->getConfigDir() / "reminder.mp3").string();
+        auto soundPath = (CCFileUtils::sharedFileUtils()->fullPathForFilename("reminder.mp3"));
         FMODAudioEngine::sharedEngine()->playEffect(soundPath.c_str());
     }
 
     void showReminderNow() {
         auto message = getRandomMessage();
 
-        auto notif = Notification::create(
-            message,
-            NotificationIcon::Info,
-            4.5f
-        );
-
-        if (notif) {
-            notif->show();
+        auto scene = CCDirector::sharedDirector()->getRunningScene();
+        if (scene) {
+            auto notif = TopReminderNotification::create(message);
+            if (notif) {
+                scene->addChild(notif, 9999);
+            }
         }
 
         playReminderSound();
