@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/CCScene.hpp>
 
 using namespace geode::prelude;
 
@@ -209,55 +210,44 @@ protected:
 
     bool getNotificationsEnabled() {
         auto mod = Mod::get();
-        if (mod->hasSetting("enable-notifications")) {
-            return mod->getSettingValue<bool>("enable-notifications");
-        }
-        return true;
+        return mod->hasSetting("enable-notifications")
+            ? mod->getSettingValue<bool>("enable-notifications")
+            : true;
     }
 
     bool getTestMode() {
         auto mod = Mod::get();
-        if (mod->hasSetting("test-mode")) {
-            return mod->getSettingValue<bool>("test-mode");
-        }
-        return false;
+        return mod->hasSetting("test-mode")
+            ? mod->getSettingValue<bool>("test-mode")
+            : false;
     }
 
     bool getFrenchEnabled() {
         auto mod = Mod::get();
-        if (mod->hasSetting("language-french")) {
-            return mod->getSettingValue<bool>("language-french");
-        }
-        return false;
+        return mod->hasSetting("language-french")
+            ? mod->getSettingValue<bool>("language-french")
+            : false;
     }
 
     bool getUseHours() {
         auto mod = Mod::get();
-        if (mod->hasSetting("reminder-hours")) {
-            return mod->getSettingValue<bool>("reminder-hours");
-        }
-        return false;
+        return mod->hasSetting("reminder-hours")
+            ? mod->getSettingValue<bool>("reminder-hours")
+            : false;
     }
 
     int getReminderAmount() {
         auto mod = Mod::get();
         if (mod->hasSetting("reminder-amount")) {
             int amount = static_cast<int>(mod->getSettingValue<int64_t>("reminder-amount"));
-            if (amount < 1) amount = 1;
-            return amount;
+            return std::max(1, amount);
         }
         return 30;
     }
 
     float getReminderSeconds() {
         int amount = getReminderAmount();
-        bool useHours = getUseHours();
-
-        if (useHours) {
-            return static_cast<float>(amount * 3600);
-        }
-
-        return static_cast<float>(amount * 60);
+        return getUseHours() ? static_cast<float>(amount * 3600) : static_cast<float>(amount * 60);
     }
 
     std::string getRandomMessage() {
@@ -265,7 +255,6 @@ protected:
             auto msgs = getFrenchMessages();
             return msgs[rand() % msgs.size()];
         }
-
         auto msgs = getEnglishMessages();
         return msgs[rand() % msgs.size()];
     }
@@ -280,7 +269,7 @@ protected:
         }
     }
 
-    void attachNotificationToCurrentScene(std::string const& message) {
+    void showReminderNow() {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
 
@@ -289,16 +278,12 @@ protected:
             existing->removeFromParentAndCleanup(true);
         }
 
-        auto notif = TopReminderNotification::create(message);
+        auto notif = TopReminderNotification::create(getRandomMessage());
         if (notif) {
             notif->setTag(987654);
             scene->addChild(notif, 999999);
         }
-    }
 
-    void showReminderNow() {
-        auto message = getRandomMessage();
-        attachNotificationToCurrentScene(message);
         playReminderSound();
     }
 
@@ -392,6 +377,20 @@ public:
 
 static ReminderManager* g_manager = nullptr;
 
+class $modify(GoOutsideBroSceneFix, CCScene) {
+    void onEnter() {
+        CCScene::onEnter();
+
+        if (!g_manager) {
+            g_manager = ReminderManager::create();
+        }
+
+        if (g_manager && !g_manager->getParent()) {
+            this->addChild(g_manager, 999998);
+        }
+    }
+};
+
 class $modify(GoOutsideBroMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) {
@@ -437,8 +436,4 @@ class $modify(GoOutsideBroMenuLayer, MenuLayer) {
 
 $on_mod(Loaded) {
     log::info("Go outside, bro! loaded");
-
-    if (!g_manager) {
-        g_manager = ReminderManager::create();
-    }
 }
