@@ -20,7 +20,6 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         id: build-android
         with:
-          sdk: "latest"
           target: "Android64"
 
       - name: Upload Android artifact
@@ -41,7 +40,6 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         id: build-win
         with:
-          sdk: "latest"
           target: "Win64"
 
       - name: Upload Windows artifact
